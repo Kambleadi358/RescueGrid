@@ -250,3 +250,5 @@ g++ -std=c++17 -Wall -Wextra cpp/rescuegrid.cpp -o rescuegrid.exe
 ## 📜 License & Academic Integrity
 
 This project is submitted for Third-Year Computer Engineering / Information Technology DAA coursework. Code is available for educational and study purposes.
+#   R e s c u e G r i d  
+ 
