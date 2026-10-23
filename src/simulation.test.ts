@@ -62,6 +62,42 @@ describe('RescueGrid Master Acceptance Criteria (#1–#20)', () => {
     expect(customScenario.teams[0].id).toBe('T-2');
   });
 
+  it('User-defined input starts clean with zero demo entries and retains only user-added items', () => {
+    const cleanUserScenario: Scenario = {
+      name: 'Custom Disaster Scenario',
+      description: 'User-configured emergency response scenario.',
+      incidents: [],
+      teams: [],
+      roads: roads.map(r => ({ ...r, blocked: false })),
+      packages: [],
+      capacity: 15,
+    };
+
+    // Starts clean with zero pre-existing demo entries
+    expect(cleanUserScenario.incidents.length).toBe(0);
+    expect(cleanUserScenario.teams.length).toBe(0);
+    expect(cleanUserScenario.packages.length).toBe(0);
+
+    // User adds their custom items only
+    cleanUserScenario.incidents.push(makeIncident('USER-1', 'MKT', 'Critical', 22, true, 15));
+    cleanUserScenario.teams.push({ id: 'T-USR', name: 'User Team', capability: 'medical', available: true, location: 'HQ' });
+    cleanUserScenario.packages.push({ id: 'PKG-USR', name: 'User First Aid', weight: 4, value: 20, category: 'Medical', quantity: 2 });
+
+    expect(cleanUserScenario.incidents.length).toBe(1);
+    expect(cleanUserScenario.incidents[0].id).toBe('USER-1');
+    expect(cleanUserScenario.teams.length).toBe(1);
+    expect(cleanUserScenario.teams[0].id).toBe('T-USR');
+    expect(cleanUserScenario.packages.length).toBe(1);
+    expect(cleanUserScenario.packages[0].id).toBe('PKG-USR');
+
+    // Planning on clean user input succeeds and plans only the user-added items
+    const plan = planScenario(cleanUserScenario, locations);
+    expect(plan.ordered.length).toBe(1);
+    expect(plan.ordered[0].id).toBe('USER-1');
+    expect(plan.eligible.length).toBe(1);
+    expect(plan.teamMap['USER-1']?.name).toBe('User Team');
+  });
+
   // ── Acceptance #4: Map edge clicks update the exact road state used by simulation ──
   it('Acceptance #4: map edge toggling directly alters graph reachability in simulation', () => {
     const s = { ...demos[0], roads: demos[0].roads.map(r => ({ ...r })) };

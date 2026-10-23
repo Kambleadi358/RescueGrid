@@ -162,33 +162,41 @@ export function ReviewMission({ scenario, onBackToEdit, onConfirmLaunch }: Revie
             <PackageIcon size={15} />
             <span className="card-title">Resource Packages ({scenario.packages.length})</span>
           </div>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Package</th>
-                <th>Qty</th>
-                <th>Unit Wt</th>
-                <th>Total Wt</th>
-                <th>Benefit</th>
-                <th>Category</th>
-              </tr>
-            </thead>
-            <tbody>
-              {scenario.packages.map(p => {
-                const qty = p.quantity ?? 1;
-                return (
-                  <tr key={p.id}>
-                    <td><strong>{p.name}</strong></td>
-                    <td><span className="panel-badge">{qty}x</span></td>
-                    <td>{p.weight}</td>
-                    <td>{p.weight * qty}</td>
-                    <td>{p.value * qty}</td>
-                    <td><span className="status-chip eligible">{p.category}</span></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          {scenario.packages.length === 0 ? (
+            <div className="card-body">
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>
+                No relief packages configured. Simulation will proceed with rescue personnel and evacuation operations.
+              </p>
+            </div>
+          ) : (
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Package</th>
+                  <th>Qty</th>
+                  <th>Unit Wt</th>
+                  <th>Total Wt</th>
+                  <th>Benefit</th>
+                  <th>Category</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scenario.packages.map(p => {
+                  const qty = p.quantity ?? 1;
+                  return (
+                    <tr key={p.id}>
+                      <td><strong>{p.name}</strong></td>
+                      <td><span className="panel-badge">{qty}x</span></td>
+                      <td>{p.weight}</td>
+                      <td>{p.weight * qty}</td>
+                      <td>{p.value * qty}</td>
+                      <td><span className="status-chip eligible">{p.category}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

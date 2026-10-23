@@ -97,26 +97,18 @@ function App() {
 
   // Choose custom mode
   const handleSelectCustom = useCallback(() => {
-    // Reset to base scenario template
+    // Clean user-defined scenario template (clean state, zero pre-filled demo entries)
     const customTemplate: Scenario = {
       name: 'Custom Disaster Scenario',
       description: 'User-configured emergency response scenario.',
-      incidents: [
-        { id: 'INC-101', name: 'Downtown Flood Distress', location: 'MKT', urgency: 'Critical', people: 35, medical: true, waiting: 20, travel: 0, needCapability: 'medical' },
-        { id: 'INC-102', name: 'School Evacuation Warning', location: 'SCH', urgency: 'High', people: 25, medical: false, waiting: 10, travel: 0, needCapability: 'general' },
-        { id: 'INC-103', name: 'Shelter Supply Run', location: 'SHL', urgency: 'Medium', people: 15, medical: false, waiting: 5, travel: 0, needCapability: 'flood' },
-      ],
-      teams: [
-        { id: 'TM-1', name: 'Medic One', capability: 'medical', available: true, location: 'HQ' },
-        { id: 'TM-2', name: 'Rescue Squad', capability: 'general', available: true, location: 'POL' },
-        { id: 'TM-3', name: 'Water Patrol', capability: 'flood', available: false, location: 'WH' },
-      ],
-      roads: roads.map(r => ({ ...r })),
-      packages: packages.map(p => ({ ...p })),
+      incidents: [],
+      teams: [],
+      roads: roads.map(r => ({ ...r, blocked: false })),
+      packages: [],
       capacity: 15,
     };
     setScenario(customTemplate);
-    setSelectedIncidentId(customTemplate.incidents[0]?.id ?? '');
+    setSelectedIncidentId('');
     setSimPlaying(false);
     setView('builder');
   }, []);
@@ -133,10 +125,19 @@ function App() {
     }));
   }, []);
 
-  // Reset to default scenario
-  const handleResetToDefaults = useCallback(() => {
-    setScenario(initialDemos[0]);
-    setSelectedIncidentId(initialDemos[0].incidents[0]?.id ?? '');
+  // Reset custom scenario inputs to clean state
+  const handleResetCustomInputs = useCallback(() => {
+    const cleanTemplate: Scenario = {
+      name: 'Custom Disaster Scenario',
+      description: 'User-configured emergency response scenario.',
+      incidents: [],
+      teams: [],
+      roads: roads.map(r => ({ ...r, blocked: false })),
+      packages: [],
+      capacity: 15,
+    };
+    setScenario(cleanTemplate);
+    setSelectedIncidentId('');
     setSimPlaying(false);
   }, []);
 
@@ -254,7 +255,7 @@ function App() {
             setScenario={setScenario}
             onReview={() => setView('review')}
             onBackToMode={() => setView('mode_select')}
-            onResetToDefaults={handleResetToDefaults}
+            onResetToDefaults={handleResetCustomInputs}
             zoom={zoom}
             offsetX={offsetX}
             offsetY={offsetY}
@@ -288,7 +289,12 @@ function App() {
               </div>
 
               <div className="incident-list">
-                {plan.ordered.map((inc, i) => {
+                {plan.ordered.length === 0 ? (
+                  <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                    No incidents configured. Return to Scenario Builder to add incidents.
+                  </div>
+                ) : (
+                  plan.ordered.map((inc, i) => {
                   const reachable = plan.routeMap[inc.id]?.found ?? false;
                   const live = simState.incidentStates[inc.id];
                   const isSelected = selectedIncidentId === inc.id;
@@ -334,7 +340,7 @@ function App() {
                       </div>
                     </div>
                   );
-                })}
+                }))}
               </div>
 
               <div className="sidebar-quick-nav">
@@ -576,7 +582,9 @@ function App() {
                   </>
                 ) : (
                   <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>
-                    Select an incident from the priority list or map.
+                    {scenario.incidents.length === 0
+                      ? 'No incidents configured. Return to Scenario Builder to add incidents.'
+                      : 'Select an incident from the priority list or map.'}
                   </div>
                 )}
               </div>

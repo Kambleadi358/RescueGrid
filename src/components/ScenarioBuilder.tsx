@@ -131,10 +131,6 @@ export function ScenarioBuilder({
 
   // Remove Incident
   const handleRemoveIncident = (id: string) => {
-    if (scenario.incidents.length <= 1) {
-      alert('Scenario must contain at least 1 incident.');
-      return;
-    }
     setScenario(prev => ({
       ...prev,
       incidents: prev.incidents.filter(x => x.id !== id),
@@ -167,10 +163,6 @@ export function ScenarioBuilder({
 
   // Remove Team
   const handleRemoveTeam = (teamName: string) => {
-    if (scenario.teams.length <= 1) {
-      alert('Scenario must contain at least 1 team.');
-      return;
-    }
     setScenario(prev => ({
       ...prev,
       teams: prev.teams.filter(t => t.name !== teamName),
@@ -205,14 +197,25 @@ export function ScenarioBuilder({
 
   // Remove Package
   const handleRemovePackage = (id: string) => {
-    if (scenario.packages.length <= 1) {
-      alert('Scenario must contain at least 1 resource package.');
-      return;
-    }
     setScenario(prev => ({
       ...prev,
       packages: prev.packages.filter(p => p.id !== id),
     }));
+  };
+
+  // Validate and proceed to review
+  const handleProceedToReview = () => {
+    if (scenario.incidents.length === 0) {
+      alert('Please add at least 1 incident before reviewing your scenario.');
+      setActiveTab('incidents');
+      return;
+    }
+    if (scenario.teams.length === 0) {
+      alert('Please add at least 1 rescue team before reviewing your scenario.');
+      setActiveTab('teams');
+      return;
+    }
+    onReview();
   };
 
   // Incident pins for map preview
@@ -237,10 +240,10 @@ export function ScenarioBuilder({
           <span className="builder-sub-badge">Interactive Map &amp; Resource Config</span>
         </div>
         <div className="builder-header-actions">
-          <button className="btn-sm" onClick={onResetToDefaults} title="Reset to standard default scenario">
+          <button className="btn-sm" onClick={onResetToDefaults} title="Reset to clean user scenario">
             <RotateCcw size={14} /> Reset Inputs
           </button>
-          <button className="btn-primary btn-lg" onClick={onReview}>
+          <button className="btn-primary btn-lg" onClick={handleProceedToReview}>
             <Check size={16} /> Review Mission Scenario <ArrowRight size={16} />
           </button>
         </div>
@@ -280,42 +283,50 @@ export function ScenarioBuilder({
                   <span className="card-title">Incidents Management</span>
                   <span className="panel-badge">{scenario.incidents.length} active</span>
                 </div>
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Incident</th>
-                      <th>Location</th>
-                      <th>Urgency</th>
-                      <th>People</th>
-                      <th>Med</th>
-                      <th>Capability</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {scenario.incidents.map((x, i) => (
-                      <tr key={x.id}>
-                        <td><strong>#{i + 1}</strong></td>
-                        <td>{x.name ?? x.id}</td>
-                        <td>{locations.find(l => l.id === x.location)?.shortName ?? x.location}</td>
-                        <td><span className={`priority-badge ${x.urgency}`}>{x.urgency}</span></td>
-                        <td>{x.people}</td>
-                        <td>{x.medical ? '✓' : '—'}</td>
-                        <td><span style={{ textTransform: 'capitalize' }}>{x.needCapability ?? 'general'}</span></td>
-                        <td>
-                          <button
-                            className="btn-icon btn-danger-ghost"
-                            onClick={() => handleRemoveIncident(x.id)}
-                            title="Remove incident"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </td>
+                {scenario.incidents.length === 0 ? (
+                  <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <AlertTriangle size={24} style={{ opacity: 0.5, display: 'block', margin: '0 auto 8px auto' }} />
+                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-main)' }}>No incidents added yet</div>
+                    <div style={{ fontSize: 12, marginTop: 4 }}>Use the form below to add your custom disaster incidents.</div>
+                  </div>
+                ) : (
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Incident</th>
+                        <th>Location</th>
+                        <th>Urgency</th>
+                        <th>People</th>
+                        <th>Med</th>
+                        <th>Capability</th>
+                        <th>Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {scenario.incidents.map((x, i) => (
+                        <tr key={x.id}>
+                          <td><strong>#{i + 1}</strong></td>
+                          <td>{x.name ?? x.id}</td>
+                          <td>{locations.find(l => l.id === x.location)?.shortName ?? x.location}</td>
+                          <td><span className={`priority-badge ${x.urgency}`}>{x.urgency}</span></td>
+                          <td>{x.people}</td>
+                          <td>{x.medical ? '✓' : '—'}</td>
+                          <td><span style={{ textTransform: 'capitalize' }}>{x.needCapability ?? 'general'}</span></td>
+                          <td>
+                            <button
+                              className="btn-icon btn-danger-ghost"
+                              onClick={() => handleRemoveIncident(x.id)}
+                              title="Remove incident"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
 
               {/* Add Incident Form */}
@@ -424,54 +435,62 @@ export function ScenarioBuilder({
                   <span className="card-title">Rescue Teams</span>
                   <span className="panel-badge">{scenario.teams.filter(t => t.available).length} available</span>
                 </div>
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Team Name</th>
-                      <th>Capability</th>
-                      <th>Location</th>
-                      <th>Status</th>
-                      <th>Toggle</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {scenario.teams.map(t => (
-                      <tr key={t.name}>
-                        <td><strong>{t.name}</strong></td>
-                        <td style={{ textTransform: 'capitalize' }}>{t.capability}</td>
-                        <td>{t.location}</td>
-                        <td>
-                          <span className={`status-chip ${t.available ? 'eligible' : 'unreachable'}`}>
-                            {t.available ? 'Available' : 'Unavailable'}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className="btn-sm"
-                            onClick={() => {
-                              setScenario(prev => ({
-                                ...prev,
-                                teams: prev.teams.map(x => x.name === t.name ? { ...x, available: !x.available } : x),
-                              }));
-                            }}
-                          >
-                            Set {t.available ? 'Unavailable' : 'Available'}
-                          </button>
-                        </td>
-                        <td>
-                          <button
-                            className="btn-icon btn-danger-ghost"
-                            onClick={() => handleRemoveTeam(t.name)}
-                            title="Remove team"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </td>
+                {scenario.teams.length === 0 ? (
+                  <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <Users size={24} style={{ opacity: 0.5, display: 'block', margin: '0 auto 8px auto' }} />
+                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-main)' }}>No rescue teams added yet</div>
+                    <div style={{ fontSize: 12, marginTop: 4 }}>Use the form below to deploy custom rescue teams.</div>
+                  </div>
+                ) : (
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Team Name</th>
+                        <th>Capability</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Toggle</th>
+                        <th>Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {scenario.teams.map(t => (
+                        <tr key={t.name}>
+                          <td><strong>{t.name}</strong></td>
+                          <td style={{ textTransform: 'capitalize' }}>{t.capability}</td>
+                          <td>{t.location}</td>
+                          <td>
+                            <span className={`status-chip ${t.available ? 'eligible' : 'unreachable'}`}>
+                              {t.available ? 'Available' : 'Unavailable'}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              className="btn-sm"
+                              onClick={() => {
+                                setScenario(prev => ({
+                                  ...prev,
+                                  teams: prev.teams.map(x => x.name === t.name ? { ...x, available: !x.available } : x),
+                                }));
+                              }}
+                            >
+                              Set {t.available ? 'Unavailable' : 'Available'}
+                            </button>
+                          </td>
+                          <td>
+                            <button
+                              className="btn-icon btn-danger-ghost"
+                              onClick={() => handleRemoveTeam(t.name)}
+                              title="Remove team"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
 
               {/* Add Team Form */}
@@ -565,38 +584,46 @@ export function ScenarioBuilder({
                   <span className="card-title">Resource Packages</span>
                   <span className="panel-badge">{scenario.packages.length} packages</span>
                 </div>
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Package Name</th>
-                      <th>Qty</th>
-                      <th>Unit Weight</th>
-                      <th>Benefit (Value)</th>
-                      <th>Category</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {scenario.packages.map(p => (
-                      <tr key={p.id}>
-                        <td><strong>{p.name}</strong></td>
-                        <td><span className="panel-badge">{p.quantity ?? 1}x</span></td>
-                        <td>{p.weight} units</td>
-                        <td>{p.value} supported</td>
-                        <td><span className="status-chip eligible">{p.category}</span></td>
-                        <td>
-                          <button
-                            className="btn-icon btn-danger-ghost"
-                            onClick={() => handleRemovePackage(p.id)}
-                            title="Remove package"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </td>
+                {scenario.packages.length === 0 ? (
+                  <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <PackageIcon size={24} style={{ opacity: 0.5, display: 'block', margin: '0 auto 8px auto' }} />
+                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-main)' }}>No relief packages added yet</div>
+                    <div style={{ fontSize: 12, marginTop: 4 }}>Use the form below to configure custom relief supplies.</div>
+                  </div>
+                ) : (
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Package Name</th>
+                        <th>Qty</th>
+                        <th>Unit Weight</th>
+                        <th>Benefit (Value)</th>
+                        <th>Category</th>
+                        <th>Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {scenario.packages.map(p => (
+                        <tr key={p.id}>
+                          <td><strong>{p.name}</strong></td>
+                          <td><span className="panel-badge">{p.quantity ?? 1}x</span></td>
+                          <td>{p.weight} units</td>
+                          <td>{p.value} supported</td>
+                          <td><span className="status-chip eligible">{p.category}</span></td>
+                          <td>
+                            <button
+                              className="btn-icon btn-danger-ghost"
+                              onClick={() => handleRemovePackage(p.id)}
+                              title="Remove package"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
 
               {/* Add Package Form */}
